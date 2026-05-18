@@ -8,6 +8,12 @@ let timer = null;
 let isRunning = false;
 let isBreak = false;
 
+let completedPomodoros =
+  Number(localStorage.getItem("count")) || 0;
+
+let totalStudyMinutes =
+  Number(localStorage.getItem("study")) || 0;
+
 const timerEl =
   document.getElementById("timer");
 
@@ -22,6 +28,21 @@ const stopBtn =
 
 const resetBtn =
   document.getElementById("resetBtn");
+
+const countEl =
+  document.getElementById("count");
+
+const studyEl =
+  document.getElementById("studyTime");
+
+const taskInput =
+  document.getElementById("taskInput");
+
+const currentTask =
+  document.getElementById("currentTask");
+
+const themeBtn =
+  document.getElementById("themeBtn");
 
 function formatTime(seconds) {
 
@@ -42,6 +63,8 @@ function playAlarm() {
     );
 
   audio.play();
+
+  navigator.vibrate(500);
 }
 
 function notify(message) {
@@ -63,6 +86,31 @@ function updateDisplay() {
 
   modeEl.textContent =
     isBreak ? "休憩中" : "作業中";
+
+  countEl.textContent =
+    completedPomodoros;
+
+  studyEl.textContent =
+    totalStudyMinutes;
+
+  const task =
+    taskInput.value.trim();
+
+  currentTask.textContent =
+    task || "タスク未設定";
+}
+
+function saveData() {
+
+  localStorage.setItem(
+    "count",
+    completedPomodoros
+  );
+
+  localStorage.setItem(
+    "study",
+    totalStudyMinutes
+  );
 }
 
 function startTimer() {
@@ -100,7 +148,14 @@ function startTimer() {
           "25分経過。休憩してください"
         );
 
+        completedPomodoros++;
+
+        totalStudyMinutes += 25;
+
+        saveData();
+
         isBreak = true;
+
         totalSeconds = BREAK_TIME;
 
       } else {
@@ -110,6 +165,7 @@ function startTimer() {
         );
 
         isBreak = false;
+
         totalSeconds = WORK_TIME;
       }
     }
@@ -139,6 +195,13 @@ function resetTimer() {
   updateDisplay();
 }
 
+function toggleTheme() {
+
+  document.body.classList.toggle(
+    "light"
+  );
+}
+
 startBtn.addEventListener(
   "click",
   async () => {
@@ -163,6 +226,11 @@ stopBtn.addEventListener(
 resetBtn.addEventListener(
   "click",
   resetTimer
+);
+
+themeBtn.addEventListener(
+  "click",
+  toggleTheme
 );
 
 updateDisplay();

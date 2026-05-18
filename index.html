@@ -4,18 +4,53 @@
   <meta charset="UTF-8">
   <meta name="viewport"
         content="width=device-width, initial-scale=1.0">
+
   <title>Pomodoro Timer</title>
 
   <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
   <div class="container">
 
-    <h1 id="mode">作業中</h1>
+    <h1>Pomodoro Timer</h1>
+
+    <input
+      type="text"
+      id="taskInput"
+      placeholder="タスクを入力"
+    >
+
+    <h2 id="currentTask">
+      タスク未設定
+    </h2>
+
+    <h2 id="mode">
+      作業中
+    </h2>
 
     <div id="timer">
       25:00
+    </div>
+
+    <div class="stats">
+
+      <p>
+        完了セット数:
+        <span id="count">
+          0
+        </span>
+      </p>
+
+      <p>
+        今日の集中時間:
+        <span id="studyTime">
+          0
+        </span>
+        分
+      </p>
+
     </div>
 
     <button id="startBtn">
@@ -25,11 +60,15 @@
     <button id="stopBtn">
       停止
     </button>
-    
+
     <button id="resetBtn">
-     リセット
+      リセット
     </button>
-    
+
+    <button id="themeBtn">
+      ダーク切替
+    </button>
+
   </div>
 
   <script src="script.js"></script>
