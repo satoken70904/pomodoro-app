@@ -8,17 +8,21 @@ let timer = null;
 let isRunning = false;
 let isBreak = false;
 
+let currentSet = 0;
+
+let targetSets = 1;
+
+let notified10 = false;
+let notified20 = false;
+
+const alarmSound =
+  "https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg";
+
 let completedPomodoros =
   Number(localStorage.getItem("count")) || 0;
 
 let totalStudyMinutes =
   Number(localStorage.getItem("study")) || 0;
-
-let currentSet = 0;
-let targetSets = 1;
-
-const alarmSound =
-  "https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg";
 
 const timerEl =
   document.getElementById("timer");
@@ -35,6 +39,9 @@ const stopBtn =
 const resetBtn =
   document.getElementById("resetBtn");
 
+const themeBtn =
+  document.getElementById("themeBtn");
+
 const countEl =
   document.getElementById("count");
 
@@ -47,14 +54,8 @@ const taskInput =
 const currentTask =
   document.getElementById("currentTask");
 
-const themeBtn =
-  document.getElementById("themeBtn");
-
 const setInput =
   document.getElementById("setInput");
-
-let notified10 = false;
-let notified20 = false;
 
 function formatTime(seconds) {
 
@@ -84,7 +85,10 @@ function notify(message) {
 
   playAlarm();
 
-  if (Notification.permission === "granted") {
+  if (
+    Notification.permission ===
+    "granted"
+  ) {
 
     new Notification(message);
   }
@@ -129,6 +133,7 @@ function saveData() {
 function resetNotifications() {
 
   notified10 = false;
+
   notified20 = false;
 }
 
@@ -144,7 +149,9 @@ function startTimer() {
   timer = setInterval(() => {
 
     const totalPhase =
-      isBreak ? BREAK_TIME : WORK_TIME;
+      isBreak
+      ? BREAK_TIME
+      : WORK_TIME;
 
     const elapsed =
       totalPhase - totalSeconds;
@@ -188,7 +195,9 @@ function startTimer() {
 
         saveData();
 
-        if (currentSet >= targetSets) {
+        if (
+          currentSet >= targetSets
+        ) {
 
           notify(
             `${targetSets}セット完了`
@@ -201,7 +210,8 @@ function startTimer() {
 
         isBreak = true;
 
-        totalSeconds = BREAK_TIME;
+        totalSeconds =
+          BREAK_TIME;
 
       } else {
 
@@ -211,7 +221,8 @@ function startTimer() {
 
         isBreak = false;
 
-        totalSeconds = WORK_TIME;
+        totalSeconds =
+          WORK_TIME;
       }
 
       resetNotifications();
@@ -255,6 +266,7 @@ function toggleTheme() {
 
 startBtn.addEventListener(
   "click",
+
   async () => {
 
     if (
