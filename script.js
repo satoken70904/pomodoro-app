@@ -1,8 +1,6 @@
 const WORK_TIME = 25 * 60;
 const BREAK_TIME = 5 * 60;
 
-let totalSeconds = WORK_TIME;
-
 let timer = null;
 
 let isRunning = false;
@@ -15,8 +13,16 @@ let targetSets = 1;
 let notified10 = false;
 let notified20 = false;
 
+let endTime =
+  Number(localStorage.getItem("endTime")) || 0;
+
 const alarmSound =
   "https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg";
+
+const alarmAudio =
+  new Audio(alarmSound);
+
+alarmAudio.preload = "auto";
 
 let completedPomodoros =
   Number(localStorage.getItem("count")) || 0;
@@ -70,10 +76,12 @@ function formatTime(seconds) {
 
 function playAlarm() {
 
-  const audio =
-    new Audio(alarmSound);
+  alarmAudio.pause();
 
-  audio.play();
+  alarmAudio.currentTime = 0;
+
+  alarmAudio.play()
+    .catch(() => {});
 
   if (navigator.vibrate) {
 
@@ -81,29 +89,20 @@ function playAlarm() {
   }
 }
 
-function notify(message) {
+function notify() {
 
   playAlarm();
-
-  if (
-    "Notification" in window &&
-    Notification.permission ===
-    "granted"
-  ) {
-
-    new Notification(message);
-  }
-
-  alert(message);
 }
 
-function updateDisplay() {
+function updateDisplay(secondsLeft) {
 
   timerEl.textContent =
-    formatTime(totalSeconds);
+    formatTime(secondsLeft);
 
   modeEl.textContent =
-    isBreak ? "休憩中" : "作業中";
+    isBreak
+    ? "休憩中"
+    : "作業中";
 
   countEl.textContent =
     completedPomodoros;
@@ -129,6 +128,11 @@ function saveData() {
     "study",
     totalStudyMinutes
   );
+
+  localStorage.setItem(
+    "endTime",
+    endTime
+  );
 }
 
 function resetNotifications() {
@@ -138,24 +142,32 @@ function resetNotifications() {
   notified20 = false;
 }
 
-function startTimer() {
+function getRemainingSeconds() {
 
-  if (isRunning) return;
+  return Math.max(
+    0,
+    Math.floor(
+      (endTime - Date.now()) / 1000
+    )
+  );
+}
 
-  targetSets =
-    Number(setInput.value) || 1;
+function startPhase(duration) {
 
-  isRunning = true;
+  endTime =
+    Date.now() + duration * 1000;
+
+  saveData();
+
+  clearInterval(timer);
 
   timer = setInterval(() => {
 
-    const totalPhase =
-      isBreak
-      ? BREAK_TIME
-      : WORK_TIME;
+    const remaining =
+      getRemainingSeconds();
 
     const elapsed =
-      totalPhase - totalSeconds;
+      duration - remaining;
 
     if (
       elapsed >= 10 * 60 &&
@@ -164,7 +176,7 @@ function startTimer() {
 
       notified10 = true;
 
-      notify("10分経過");
+      notify();
     }
 
     if (
@@ -175,18 +187,18 @@ function startTimer() {
 
       notified20 = true;
 
-      notify("20分経過");
+      notify();
     }
 
-    totalSeconds--;
+    updateDisplay(remaining);
 
-    if (totalSeconds < 0) {
+    if (remaining <= 0) {
+
+      clearInterval(timer);
+
+      notify();
 
       if (!isBreak) {
-
-        notify(
-          "25分経過。休憩してください"
-        );
 
         completedPomodoros++;
 
@@ -200,9 +212,7 @@ function startTimer() {
           currentSet >= targetSets
         ) {
 
-          notify(
-            `${targetSets}セット完了`
-          );
+          notify();
 
           resetTimer();
 
@@ -211,27 +221,37 @@ function startTimer() {
 
         isBreak = true;
 
-        totalSeconds =
-          BREAK_TIME;
+        resetNotifications();
+
+        startPhase(BREAK_TIME);
 
       } else {
 
-        notify(
-          "5分休憩終了"
-        );
-
         isBreak = false;
 
-        totalSeconds =
-          WORK_TIME;
-      }
+        resetNotifications();
 
-      resetNotifications();
+        startPhase(WORK_TIME);
+      }
     }
 
-    updateDisplay();
-
   }, 1000);
+}
+
+function startTimer() {
+
+  if (isRunning) return;
+
+  targetSets =
+    Number(setInput.value) || 1;
+
+  isRunning = true;
+
+  startPhase(
+    isBreak
+    ? BREAK_TIME
+    : WORK_TIME
+  );
 }
 
 function stopTimer() {
@@ -249,13 +269,17 @@ function resetTimer() {
 
   isBreak = false;
 
-  totalSeconds = WORK_TIME;
-
   currentSet = 0;
+
+  endTime = 0;
 
   resetNotifications();
 
-  updateDisplay();
+  localStorage.removeItem(
+    "endTime"
+  );
+
+  updateDisplay(WORK_TIME);
 }
 
 function toggleTheme() {
@@ -267,19 +291,7 @@ function toggleTheme() {
 
 startBtn.addEventListener(
   "click",
-
-  async () => {
-
-    if ("Notification" in window) {
-
-      if (
-        Notification.permission !==
-        "granted"
-      ) {
-
-        await Notification.requestPermission();
-      }
-    }
+  () => {
 
     startTimer();
   }
@@ -300,4 +312,4 @@ themeBtn.addEventListener(
   toggleTheme
 );
 
-updateDisplay();
+updateDisplay(WORK_TIME);
