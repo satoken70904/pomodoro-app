@@ -14,6 +14,12 @@ let completedPomodoros =
 let totalStudyMinutes =
   Number(localStorage.getItem("study")) || 0;
 
+let currentSet = 0;
+let targetSets = 1;
+
+const alarmSound =
+  "https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg";
+
 const timerEl =
   document.getElementById("timer");
 
@@ -44,6 +50,12 @@ const currentTask =
 const themeBtn =
   document.getElementById("themeBtn");
 
+const setInput =
+  document.getElementById("setInput");
+
+let notified10 = false;
+let notified20 = false;
+
 function formatTime(seconds) {
 
   const minutes =
@@ -58,13 +70,14 @@ function formatTime(seconds) {
 function playAlarm() {
 
   const audio =
-    new Audio(
-      "https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg"
-    );
+    new Audio(alarmSound);
 
   audio.play();
 
-  navigator.vibrate(500);
+  if (navigator.vibrate) {
+
+    navigator.vibrate(500);
+  }
 }
 
 function notify(message) {
@@ -113,34 +126,53 @@ function saveData() {
   );
 }
 
+function resetNotifications() {
+
+  notified10 = false;
+  notified20 = false;
+}
+
 function startTimer() {
 
   if (isRunning) return;
+
+  targetSets =
+    Number(setInput.value) || 1;
 
   isRunning = true;
 
   timer = setInterval(() => {
 
-    totalSeconds--;
+    const totalPhase =
+      isBreak ? BREAK_TIME : WORK_TIME;
 
     const elapsed =
-      (isBreak ? BREAK_TIME : WORK_TIME)
-      - totalSeconds;
+      totalPhase - totalSeconds;
 
-    if (elapsed === 10 * 60) {
+    if (
+      elapsed >= 10 * 60 &&
+      !notified10
+    ) {
+
+      notified10 = true;
 
       notify("10分経過");
     }
 
     if (
-      elapsed === 20 * 60 &&
+      elapsed >= 20 * 60 &&
+      !notified20 &&
       !isBreak
     ) {
+
+      notified20 = true;
 
       notify("20分経過");
     }
 
-    if (totalSeconds <= 0) {
+    totalSeconds--;
+
+    if (totalSeconds < 0) {
 
       if (!isBreak) {
 
@@ -150,9 +182,22 @@ function startTimer() {
 
         completedPomodoros++;
 
+        currentSet++;
+
         totalStudyMinutes += 25;
 
         saveData();
+
+        if (currentSet >= targetSets) {
+
+          notify(
+            `${targetSets}セット完了`
+          );
+
+          resetTimer();
+
+          return;
+        }
 
         isBreak = true;
 
@@ -168,6 +213,8 @@ function startTimer() {
 
         totalSeconds = WORK_TIME;
       }
+
+      resetNotifications();
     }
 
     updateDisplay();
@@ -191,6 +238,10 @@ function resetTimer() {
   isBreak = false;
 
   totalSeconds = WORK_TIME;
+
+  currentSet = 0;
+
+  resetNotifications();
 
   updateDisplay();
 }
