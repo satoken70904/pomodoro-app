@@ -86,6 +86,7 @@ function notify(message) {
   playAlarm();
 
   if (
+    "Notification" in window &&
     Notification.permission ===
     "granted"
   ) {
@@ -269,12 +270,15 @@ startBtn.addEventListener(
 
   async () => {
 
-    if (
-      Notification.permission !==
-      "granted"
-    ) {
+    if ("Notification" in window) {
 
-      await Notification.requestPermission();
+      if (
+        Notification.permission !==
+        "granted"
+      ) {
+
+        await Notification.requestPermission();
+      }
     }
 
     startTimer();
