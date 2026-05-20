@@ -28,7 +28,7 @@ body.light {
   text-align: center;
 
   width: 90%;
-  max-width: 400px;
+  max-width: 420px;
 }
 
 #timer {
@@ -36,20 +36,6 @@ body.light {
   font-size: 80px;
 
   margin: 30px 0;
-}
-
-button {
-
-  font-size: 18px;
-
-  padding: 12px 20px;
-
-  margin: 8px;
-
-  border: none;
-  border-radius: 10px;
-
-  cursor: pointer;
 }
 
 input {
@@ -68,7 +54,26 @@ input {
   box-sizing: border-box;
 }
 
+.buttons {
+
+  margin-top: 20px;
+}
+
+button {
+
+  font-size: 18px;
+
+  padding: 12px 18px;
+
+  margin: 6px;
+
+  border: none;
+  border-radius: 10px;
+
+  cursor: pointer;
+}
+
 .stats {
 
-  margin: 20px 0;
+  margin-top: 20px;
 }

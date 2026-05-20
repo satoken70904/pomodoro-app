@@ -1,28 +1,38 @@
 const WORK_TIME = 25 * 60;
+
 const BREAK_TIME = 5 * 60;
 
 let timer = null;
 
 let isRunning = false;
+
 let isBreak = false;
 
 let currentSet = 0;
 
 let targetSets = 1;
 
+let remainingSeconds = WORK_TIME;
+
 let notified10 = false;
+
 let notified20 = false;
 
-let endTime =
-  Number(localStorage.getItem("endTime")) || 0;
+const popSound =
+  "https://actions.google.com/sounds/v1/cartoon/pop.ogg";
 
-const alarmSound =
-  "https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg";
+const woodSound =
+  "https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg";
 
-const alarmAudio =
-  new Audio(alarmSound);
+const popAudio =
+  new Audio(popSound);
 
-alarmAudio.preload = "auto";
+const woodAudio =
+  new Audio(woodSound);
+
+popAudio.preload = "auto";
+
+woodAudio.preload = "auto";
 
 let completedPomodoros =
   Number(localStorage.getItem("count")) || 0;
@@ -63,6 +73,26 @@ const currentTask =
 const setInput =
   document.getElementById("setInput");
 
+function playPop() {
+
+  popAudio.pause();
+
+  popAudio.currentTime = 0;
+
+  popAudio.play()
+    .catch(() => {});
+}
+
+function playWood() {
+
+  woodAudio.pause();
+
+  woodAudio.currentTime = 0;
+
+  woodAudio.play()
+    .catch(() => {});
+}
+
 function formatTime(seconds) {
 
   const minutes =
@@ -74,35 +104,15 @@ function formatTime(seconds) {
   return `${String(minutes).padStart(2, "0")}:${String(remain).padStart(2, "0")}`;
 }
 
-function playAlarm() {
-
-  alarmAudio.pause();
-
-  alarmAudio.currentTime = 0;
-
-  alarmAudio.play()
-    .catch(() => {});
-
-  if (navigator.vibrate) {
-
-    navigator.vibrate(500);
-  }
-}
-
-function notify() {
-
-  playAlarm();
-}
-
-function updateDisplay(secondsLeft) {
+function updateDisplay() {
 
   timerEl.textContent =
-    formatTime(secondsLeft);
+    formatTime(remainingSeconds);
 
   modeEl.textContent =
     isBreak
-    ? "休憩中"
-    : "作業中";
+      ? "休憩中"
+      : "作業中";
 
   countEl.textContent =
     completedPomodoros;
@@ -128,75 +138,52 @@ function saveData() {
     "study",
     totalStudyMinutes
   );
-
-  localStorage.setItem(
-    "endTime",
-    endTime
-  );
 }
 
-function resetNotifications() {
+function startTimer() {
 
-  notified10 = false;
+  if (isRunning) return;
 
-  notified20 = false;
-}
+  targetSets =
+    Number(setInput.value) || 1;
 
-function getRemainingSeconds() {
-
-  return Math.max(
-    0,
-    Math.floor(
-      (endTime - Date.now()) / 1000
-    )
-  );
-}
-
-function startPhase(duration) {
-
-  endTime =
-    Date.now() + duration * 1000;
-
-  saveData();
-
-  clearInterval(timer);
+  isRunning = true;
 
   timer = setInterval(() => {
 
-    const remaining =
-      getRemainingSeconds();
-
-    const elapsed =
-      duration - remaining;
+    remainingSeconds--;
 
     if (
-      elapsed >= 10 * 60 &&
+      !isBreak &&
+      remainingSeconds <= 15 * 60 &&
+      remainingSeconds >= 15 * 60 - 1 &&
       !notified10
     ) {
 
       notified10 = true;
 
-      notify();
+      playPop();
     }
 
     if (
-      elapsed >= 20 * 60 &&
-      !notified20 &&
-      !isBreak
+      !isBreak &&
+      remainingSeconds <= 5 * 60 &&
+      remainingSeconds >= 5 * 60 - 1 &&
+      !notified20
     ) {
 
       notified20 = true;
 
-      notify();
+      playPop();
     }
 
-    updateDisplay(remaining);
+    updateDisplay();
 
-    if (remaining <= 0) {
+    if (remainingSeconds <= 0) {
 
       clearInterval(timer);
 
-      notify();
+      playWood();
 
       if (!isBreak) {
 
@@ -212,8 +199,6 @@ function startPhase(duration) {
           currentSet >= targetSets
         ) {
 
-          notify();
-
           resetTimer();
 
           return;
@@ -221,37 +206,29 @@ function startPhase(duration) {
 
         isBreak = true;
 
-        resetNotifications();
-
-        startPhase(BREAK_TIME);
+        remainingSeconds =
+          BREAK_TIME;
 
       } else {
 
         isBreak = false;
 
-        resetNotifications();
-
-        startPhase(WORK_TIME);
+        remainingSeconds =
+          WORK_TIME;
       }
+
+      notified10 = false;
+
+      notified20 = false;
+
+      updateDisplay();
+
+      isRunning = false;
+
+      startTimer();
     }
 
   }, 1000);
-}
-
-function startTimer() {
-
-  if (isRunning) return;
-
-  targetSets =
-    Number(setInput.value) || 1;
-
-  isRunning = true;
-
-  startPhase(
-    isBreak
-    ? BREAK_TIME
-    : WORK_TIME
-  );
 }
 
 function stopTimer() {
@@ -271,15 +248,14 @@ function resetTimer() {
 
   currentSet = 0;
 
-  endTime = 0;
+  remainingSeconds =
+    WORK_TIME;
 
-  resetNotifications();
+  notified10 = false;
 
-  localStorage.removeItem(
-    "endTime"
-  );
+  notified20 = false;
 
-  updateDisplay(WORK_TIME);
+  updateDisplay();
 }
 
 function toggleTheme() {
@@ -291,10 +267,7 @@ function toggleTheme() {
 
 startBtn.addEventListener(
   "click",
-  () => {
-
-    startTimer();
-  }
+  startTimer
 );
 
 stopBtn.addEventListener(
@@ -312,4 +285,4 @@ themeBtn.addEventListener(
   toggleTheme
 );
 
-updateDisplay(WORK_TIME);
+updateDisplay();
