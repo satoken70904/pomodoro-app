@@ -65,56 +65,72 @@ const setInput =
 
 function playPop() {
 
-  const oscillator =
-    audioContext.createOscillator();
+  for (let i = 0; i < 3; i++) {
 
-  const gainNode =
-    audioContext.createGain();
+    const oscillator =
+      audioContext.createOscillator();
 
-  oscillator.type = "sine";
+    const gainNode =
+      audioContext.createGain();
 
-  oscillator.frequency.value = 880;
+    oscillator.type = "sine";
 
-  gainNode.gain.value = 0.05;
+    oscillator.frequency.value = 880;
 
-  oscillator.connect(gainNode);
+    gainNode.gain.value = 0.05;
 
-  gainNode.connect(
-    audioContext.destination
-  );
+    oscillator.connect(gainNode);
 
-  oscillator.start();
+    gainNode.connect(
+      audioContext.destination
+    );
 
-  oscillator.stop(
-    audioContext.currentTime + 0.12
-  );
+    const now =
+      audioContext.currentTime;
+
+    oscillator.start(
+      now + i * 0.18
+    );
+
+    oscillator.stop(
+      now + i * 0.18 + 0.1
+    );
+  }
 }
 
 function playWood() {
 
-  const oscillator =
-    audioContext.createOscillator();
+  for (let i = 0; i < 3; i++) {
 
-  const gainNode =
-    audioContext.createGain();
+    const oscillator =
+      audioContext.createOscillator();
 
-  oscillator.type = "triangle";
+    const gainNode =
+      audioContext.createGain();
 
-  oscillator.frequency.value = 440;
+    oscillator.type = "triangle";
 
-  gainNode.gain.value = 0.08;
+    oscillator.frequency.value = 440;
 
-  oscillator.connect(gainNode);
+    gainNode.gain.value = 0.08;
 
-  gainNode.connect(
-    audioContext.destination
-  );
+    oscillator.connect(gainNode);
 
-  oscillator.start();
+    gainNode.connect(
+      audioContext.destination
+    );
 
-  oscillator.stop(
-    audioContext.currentTime + 0.4
-  );
+    const now =
+      audioContext.currentTime;
+
+    oscillator.start(
+      now + i * 0.3
+    );
+
+    oscillator.stop(
+      now + i * 0.3 + 0.22
+    );
+  }
 }
 
 function formatTime(seconds) {
