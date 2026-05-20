@@ -18,21 +18,11 @@ let notified10 = false;
 
 let notified20 = false;
 
-const popSound =
-  "https://actions.google.com/sounds/v1/cartoon/pop.ogg";
-
-const woodSound =
-  "https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg";
-
-const popAudio =
-  new Audio(popSound);
-
-const woodAudio =
-  new Audio(woodSound);
-
-popAudio.preload = "auto";
-
-woodAudio.preload = "auto";
+const audioContext =
+  new (
+    window.AudioContext ||
+    window.webkitAudioContext
+  )();
 
 let completedPomodoros =
   Number(localStorage.getItem("count")) || 0;
@@ -75,22 +65,56 @@ const setInput =
 
 function playPop() {
 
-  popAudio.pause();
+  const oscillator =
+    audioContext.createOscillator();
 
-  popAudio.currentTime = 0;
+  const gainNode =
+    audioContext.createGain();
 
-  popAudio.play()
-    .catch(() => {});
+  oscillator.type = "sine";
+
+  oscillator.frequency.value = 880;
+
+  gainNode.gain.value = 0.05;
+
+  oscillator.connect(gainNode);
+
+  gainNode.connect(
+    audioContext.destination
+  );
+
+  oscillator.start();
+
+  oscillator.stop(
+    audioContext.currentTime + 0.12
+  );
 }
 
 function playWood() {
 
-  woodAudio.pause();
+  const oscillator =
+    audioContext.createOscillator();
 
-  woodAudio.currentTime = 0;
+  const gainNode =
+    audioContext.createGain();
 
-  woodAudio.play()
-    .catch(() => {});
+  oscillator.type = "triangle";
+
+  oscillator.frequency.value = 440;
+
+  gainNode.gain.value = 0.08;
+
+  oscillator.connect(gainNode);
+
+  gainNode.connect(
+    audioContext.destination
+  );
+
+  oscillator.start();
+
+  oscillator.stop(
+    audioContext.currentTime + 0.4
+  );
 }
 
 function formatTime(seconds) {
@@ -267,7 +291,13 @@ function toggleTheme() {
 
 startBtn.addEventListener(
   "click",
-  startTimer
+
+  async () => {
+
+    await audioContext.resume();
+
+    startTimer();
+  }
 );
 
 stopBtn.addEventListener(
